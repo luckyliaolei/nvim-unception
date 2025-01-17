@@ -6,21 +6,16 @@ vim.o.sdf = "NONE"
 -- We don't want to start. Send the args to the server instance instead.
 local args = vim.call("argv")
 
-local arg_str = ""
+local arg_str = {}
 for index, iter in pairs(args) do
     local absolute_filepath = unception_get_absolute_filepath(iter)
-
-    if (string.len(arg_str) == 0) then
-        arg_str = unception_escape_special_chars(absolute_filepath)
-    else
-        arg_str = arg_str.." "..unception_escape_special_chars(absolute_filepath)
-    end
+    table.insert(arg_str, unception_escape_special_chars(absolute_filepath))
 end
 
 -- Send messages to host on existing pipe.
 local sock = vim.fn.sockconnect("pipe", os.getenv(unception_pipe_path_host_env_var), {rpc = true})
 local edit_files_call = "unception_edit_files("
-                       .."\""..arg_str.."\", "
+                       ..vim.inspect(arg_str)..", "
                        ..#args..", "
                        ..vim.inspect(vim.g.unception_open_buffer_in_new_tab)..", "
                        ..vim.inspect(vim.g.unception_delete_replaced_buffer)..", "

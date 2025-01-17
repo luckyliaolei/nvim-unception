@@ -13,7 +13,7 @@ local function unblock_client_and_reset_state()
     vim.api.nvim_del_autocmd(unception_bufunload_autocmd_id)
 
     -- Unblock client by killing its editor session.
-    vim.fn.rpcnotify(response_sock, "nvim_exec_lua", "vim.cmd('quit')", {})
+    vim.fn.rpcnotify(response_sock, "nvim_exec_lua", "vim.cmd('qall!')", {})
     vim.fn.chanclose(response_sock)
 
     -- Reset state-sensitive variables.
@@ -29,7 +29,14 @@ function _G.unception_handle_bufunload(unloaded_buffer_filepath)
     unloaded_buffer_filepath = unception_get_absolute_filepath(unloaded_buffer_filepath)
     unloaded_buffer_filepath = unception_escape_special_chars(unloaded_buffer_filepath)
 
-    if (unloaded_buffer_filepath == filepath_to_check) then
+    for i, v in ipairs(filepath_to_check) do
+        if v == unloaded_buffer_filepath then
+            table.remove(filepath_to_check, i)
+            break
+        end
+    end
+
+    if (#filepath_to_check == 0) then
         unblock_client_and_reset_state()
     end
 end
@@ -38,7 +45,14 @@ function _G.unception_handle_quitpre(quitpre_buffer_filepath)
     quitpre_buffer_filepath = unception_get_absolute_filepath(quitpre_buffer_filepath)
     quitpre_buffer_filepath = unception_escape_special_chars(quitpre_buffer_filepath)
 
-    if (quitpre_buffer_filepath == filepath_to_check) then
+    for i, v in ipairs(filepath_to_check) do
+        if v == quitpre_buffer_filepath then
+            table.remove(filepath_to_check, i)
+            break
+        end
+    end
+    
+    if (#filepath_to_check == 0) then
         -- If this buffer replaced the blocked terminal buffer, we should restore it to the same window.
         if (blocked_terminal_buffer_id ~= nil and vim.fn.bufexists(blocked_terminal_buffer_id) == 1) then
             vim.cmd("split") -- Open a new window and switch focus to it.
@@ -72,7 +86,7 @@ function _G.unception_edit_files(file_args, num_files_in_list, open_in_new_tab, 
     if (num_files_in_list > 0) then
         -- Had some issues when using argedit. Explicitly calling these
         -- separately appears to work though.
-        vim.cmd("0argadd "..file_args)
+        vim.cmd("0argadd "..table.concat(file_args, " "))
 
         if (open_in_new_tab) then
             last_replaced_buffer_id = nil
@@ -89,6 +103,10 @@ function _G.unception_edit_files(file_args, num_files_in_list, open_in_new_tab, 
         -- properly handle opening the buffer; otherwise it can occasionally
         -- segfault.
         vim.cmd("edit")
+        
+        if num_files_in_list > 1 then
+          vim.cmd("vert diffsplit " .. file_args[2])
+        end
     else
         if (open_in_new_tab) then
             last_replaced_buffer_id = nil
