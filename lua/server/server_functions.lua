@@ -89,7 +89,7 @@ function _G.unception_edit_files(file_args, num_files_in_list, open_in_new_tab, 
 
         if (open_in_new_tab) then
             last_replaced_buffer_id = nil
-            vim.cmd("tab e " .. file_args[1])
+            vim.cmd("tab split " .. file_args[1])
         else
             last_replaced_buffer_id = vim.fn.bufnr()
             vim.cmd("e " .. file_args[1])
