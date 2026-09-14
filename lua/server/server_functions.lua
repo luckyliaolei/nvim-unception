@@ -86,6 +86,9 @@ function _G.unception_edit_files(file_args, num_files_in_list, open_in_new_tab, 
     if (num_files_in_list > 0) then
         -- Had some issues when using argedit. Explicitly calling these
         -- separately appears to work though.
+        if vim.fn.isdirectory(file_args[1]) == 1 then
+          vim.fn.chdir(file_args[1], "global")
+        end
 
         if (open_in_new_tab) then
             last_replaced_buffer_id = nil
