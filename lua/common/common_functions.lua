@@ -41,7 +41,7 @@ function _G.unception_escape_special_chars(str)
         -- should be.
         str = string.gsub(str, "\\", "\\\\\\\\")
         str = string.gsub(str, "\"", "\\\\\\\"")
-        str = string.gsub(str, " ", "\\\\ ")
+        -- str = string.gsub(str, " ", "\\\\ ")
         return str
     else
         return ""
